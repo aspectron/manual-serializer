@@ -315,7 +315,6 @@ impl Serializer {
     pub fn try_utf16sz(&mut self, text : &String) -> Result<&mut Self> {
         let len = text.len()+1;
         let mut vec: Vec<u16> = Vec::with_capacity(len);
-        vec.resize(len,0);
         for c in text.chars() {
             // TODO - proper encoding
             // let buf = [0;2];
@@ -323,6 +322,7 @@ impl Serializer {
             vec.push(c as u16);
         }
         vec.push(0);
+        println!("text: {} vec: {:?}",text,vec);
         self.try_u16slice(&vec)?;
         Ok(self)
     }
