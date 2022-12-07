@@ -164,6 +164,12 @@ pub struct Serializer {
     cursor: usize,
 }
 
+impl Default for Serializer {
+    fn default() -> Serializer {
+        Serializer::new(4096)
+    }
+}
+
 impl Serializer {
     pub fn new(len: usize) -> Serializer {
         let mut data = Vec::with_capacity(len);
@@ -321,6 +327,19 @@ impl Serializer {
         Ok(self)
     }
 
+    pub fn try_u8slice(&mut self, vec : &[u8]) -> Result<&mut Self> {
+        let len = vec.len();
+        let last = self.cursor + len;
+        if last >= self.data.len() {
+            return Err(Error::TryStoreSliceError(len,self.cursor,self.data.len()));
+        }
+        let src = unsafe { std::mem::transmute(vec.as_ptr()) };
+        let dest = self.data[self.cursor..last].as_mut_ptr();
+        unsafe { std::ptr::copy(src,dest,len); }
+        self.cursor = last;
+        Ok(self)
+    }
+
     pub fn try_u16slice(&mut self, vec : &[u16]) -> Result<&mut Self> {
         let src = unsafe { std::mem::transmute(vec.as_ptr()) };
         let bytelen = vec.len()*2;
@@ -369,6 +388,12 @@ pub fn store_u32(dest : &mut [u8], v : u32) -> usize {
 }
 
 #[inline]
+pub fn store_u16(dest : &mut [u8], v : u16) -> usize {
+    dest[0..2].copy_from_slice(&v.to_le_bytes());
+    2
+}
+
+#[inline]
 pub fn store_u8(dest : &mut [u8], v : u8) -> usize {
     dest[0..1].copy_from_slice(&v.to_le_bytes());
     1
@@ -386,6 +411,12 @@ pub fn load_u32(src : &[u8]) -> u32 {
 }
 
 #[inline]
+pub fn load_u16(src : &[u8]) -> u16 {
+    u16::from_le_bytes(src[0..2].try_into().unwrap())
+}
+
+#[inline]
 pub fn load_u8(src : &[u8]) -> u8 {
     u8::from_le_bytes(src[0..1].try_into().unwrap())
 }
+
