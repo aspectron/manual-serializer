@@ -53,7 +53,7 @@ impl<'data> Deserializer<'data> {
         }
         Ok(())
     }
-    pub fn try_u8vec(&mut self, len: usize) -> Result<Vec<u8>> {
+    pub fn try_load_u8_vec(&mut self, len: usize) -> Result<Vec<u8>> {
         if self.cursor+len > self.data.len() {
             return Err(format!("try_u8vec(): deserializer cursor {} is out of bounds[0..{}]",self.cursor+len, self.data.len()).into());
         }
@@ -64,18 +64,18 @@ impl<'data> Deserializer<'data> {
         Ok(vec)
     }
 
-    pub fn try_u16vec(&mut self, len: usize) -> Result<Vec<u16>> {
+    pub fn try_load_u16le_vec(&mut self, len: usize) -> Result<Vec<u16>> {
         let mut vec: Vec<u16> = Vec::with_capacity(len);
         for _ in 0..len {
-            vec.push(self.try_u16()?)
+            vec.push(self.try_load_u16le()?)
         }
         Ok(vec)
     }
 
-    pub fn try_utf16sz(&mut self) -> Result<String> {
+    pub fn try_load_utf16le_sz(&mut self) -> Result<String> {
         let mut vec: Vec<u16> = Vec::new();
         loop {
-            let v = self.try_u16()?;
+            let v = self.try_load_u16le()?;
             if v == 0 {
                 break;
             }
@@ -84,67 +84,67 @@ impl<'data> Deserializer<'data> {
         Ok(String::from_utf16(&vec)?)
     }
 
-    pub fn u8(&mut self) -> u8 {
+    pub fn load_u8(&mut self) -> u8 {
         let last = self.cursor+1;
         let v = u8::from_le_bytes(self.data[self.cursor..last].try_into().unwrap());
         self.cursor = last;
         v
     }
 
-    pub fn try_u8(&mut self) -> Result<u8> {
+    pub fn try_load_u8(&mut self) -> Result<u8> {
         let last = self.cursor+1;
         let v = u8::from_le_bytes(self.data[self.cursor..last].try_into()?);
         self.cursor = last;
         Ok(v)
     }
 
-    pub fn u16(&mut self) -> u16 {
+    pub fn load_u16le(&mut self) -> u16 {
         let last = self.cursor + 2;
         let v = u16::from_le_bytes(self.data[self.cursor..last].try_into().unwrap());
         self.cursor = last;
         v
     }
 
-    pub fn try_u16(&mut self) -> Result<u16> {
+    pub fn try_load_u16le(&mut self) -> Result<u16> {
         let last = self.cursor+2;
         let v = u16::from_le_bytes(self.data[self.cursor..last].try_into()?);
         self.cursor = last;
         Ok(v)
     }
 
-    pub fn u32(&mut self) -> u32 {
+    pub fn load_u32le(&mut self) -> u32 {
         let last = self.cursor+4;
         let v = u32::from_le_bytes(self.data[self.cursor..last].try_into().unwrap());
         self.cursor = last;
         v
     }
 
-    pub fn try_u32(&mut self) -> Result<u32> {
+    pub fn try_load_u32le(&mut self) -> Result<u32> {
         let last = self.cursor+4;
         let v = u32::from_le_bytes(self.data[self.cursor..last].try_into()?);
         self.cursor = last;
         Ok(v)
     }
 
-    pub fn u64(&mut self) -> u64 {
+    pub fn load_u64le(&mut self) -> u64 {
         let last = self.cursor+8;
         let v = u64::from_le_bytes(self.data[self.cursor..last].try_into().unwrap());
         self.cursor = last;
         v
     }
 
-    pub fn try_u64(&mut self) -> Result<u64> {
+    pub fn try_load_u64le(&mut self) -> Result<u64> {
         let last = self.cursor+8;
         let v = u64::from_le_bytes(self.data[self.cursor..last].try_into()?);
         self.cursor = last;
         Ok(v)
     }
 
-    pub fn deserialize<S : Deserialize>(&mut self) -> S {
+    pub fn load<S : Deserialize>(&mut self) -> S {
         S::deserialize(self)
     }
 
-    pub fn try_deserialize<S : TryDeserialize>(&mut self) -> std::result::Result<S,S::Error> {
+    pub fn try_load<S : TryDeserialize>(&mut self) -> std::result::Result<S,S::Error> {
         S::try_deserialize(self)
     }
 
@@ -209,7 +209,7 @@ impl Serializer {
 
     pub fn offset_with_zeros(&mut self, offset: usize) -> &mut Self {
         for _ in 0..offset {
-            self.u8(0);
+            self.store_u8(0);
         }
         self
     }
@@ -219,7 +219,7 @@ impl Serializer {
             return Err(Error::TryOffsetError(offset,self.cursor,self.len()));
         }
         for _ in 0..offset {
-            self.u8(0);
+            self.store_u8(0);
         }
         Ok(self)
     }
@@ -244,14 +244,14 @@ impl Serializer {
         self.try_offset(offset)
     }
 
-    pub fn u8(&mut self, v: u8) -> &mut Self {
+    pub fn store_u8(&mut self, v: u8) -> &mut Self {
         let last = self.cursor+1;
         self.data[self.cursor..last].copy_from_slice(&v.to_le_bytes());
         self.cursor = last;
         self
     }
 
-    pub fn try_u8(&mut self, v: u8) -> Result<&mut Self> {
+    pub fn try_store_u8(&mut self, v: u8) -> Result<&mut Self> {
         if self.cursor + 1 >= self.data.len() {
             return Err(Error::TryStoreError("u8",self.cursor,self.data.len()));
         }
@@ -261,14 +261,14 @@ impl Serializer {
         Ok(self)
     }
 
-    pub fn u16(&mut self, v: u16) -> &mut Self {
+    pub fn store_u16le(&mut self, v: u16) -> &mut Self {
         let last = self.cursor+2;
         self.data[self.cursor..last].copy_from_slice(&v.to_le_bytes());
         self.cursor = last;
         self
     }
 
-    pub fn try_u16(&mut self, v: u16) -> Result<&mut Self> {
+    pub fn try_store_u16le(&mut self, v: u16) -> Result<&mut Self> {
         if self.cursor + 2 >= self.data.len() {
             return Err(Error::TryStoreError("u16",self.cursor,self.data.len()));
         }
@@ -278,14 +278,14 @@ impl Serializer {
         Ok(self)
     }
 
-    pub fn u32(&mut self, v: u32) -> &mut Self {
+    pub fn store_u32le(&mut self, v: u32) -> &mut Self {
         let last = self.cursor+4;
         self.data[self.cursor..last].copy_from_slice(&v.to_le_bytes());
         self.cursor = last;
         self
     }
 
-    pub fn try_u32(&mut self, v: u32) -> Result<&mut Self> {
+    pub fn try_store_u32le(&mut self, v: u32) -> Result<&mut Self> {
         if self.cursor + 4 >= self.data.len() {
             return Err(Error::TryStoreError("u32",self.cursor,self.data.len()));
         }
@@ -295,14 +295,14 @@ impl Serializer {
         Ok(self)
     }
 
-    pub fn u64(&mut self, v: u64) -> &mut Self {
+    pub fn store_u64le(&mut self, v: u64) -> &mut Self {
         let last = self.cursor+8;
         self.data[self.cursor..last].copy_from_slice(&v.to_le_bytes());
         self.cursor = last;
         self
     }
 
-    pub fn try_u64(&mut self, v: u64) -> Result<&mut Self> {
+    pub fn try_store_u64le(&mut self, v: u64) -> Result<&mut Self> {
         if self.cursor + 8 >= self.data.len() {
             return Err(Error::TryStoreError("u64",self.cursor,self.data.len()));
         }
@@ -312,7 +312,7 @@ impl Serializer {
         Ok(self)
     }
 
-    pub fn try_utf16sz(&mut self, text : &String) -> Result<&mut Self> {
+    pub fn try_store_utf16le_sz(&mut self, text : &String) -> Result<&mut Self> {
         let len = text.len()+1;
         let mut vec: Vec<u16> = Vec::with_capacity(len);
         for c in text.chars() {
@@ -323,11 +323,11 @@ impl Serializer {
         }
         vec.push(0);
         println!("text: {} vec: {:?}",text,vec);
-        self.try_u16slice(&vec)?;
+        self.try_store_u16le_slice(&vec)?;
         Ok(self)
     }
 
-    pub fn try_u8slice(&mut self, vec : &[u8]) -> Result<&mut Self> {
+    pub fn try_store_u8_slice(&mut self, vec : &[u8]) -> Result<&mut Self> {
         let len = vec.len();
         let last = self.cursor + len;
         if last >= self.data.len() {
@@ -340,7 +340,7 @@ impl Serializer {
         Ok(self)
     }
 
-    pub fn try_u16slice(&mut self, vec : &[u16]) -> Result<&mut Self> {
+    pub fn try_store_u16le_slice(&mut self, vec : &[u16]) -> Result<&mut Self> {
         let src = unsafe { std::mem::transmute(vec.as_ptr()) };
         let bytelen = vec.len()*2;
         let last = self.cursor + bytelen;
@@ -353,12 +353,12 @@ impl Serializer {
         Ok(self)
     }
 
-    pub fn serialize<S : Serialize>(&mut self, s : &S) -> &mut Self {
+    pub fn store<S : Serialize>(&mut self, s : &S) -> &mut Self {
         s.serialize(self);
         self
     }
 
-    pub fn try_serialize<S : TrySerialize>(&mut self, s : &S) -> std::result::Result<&mut Self,S::Error> {
+    pub fn try_store<S : TrySerialize>(&mut self, s : &S) -> std::result::Result<&mut Self,S::Error> {
         s.try_serialize(self)?;
         Ok(self)
     }
@@ -376,19 +376,19 @@ pub trait Serialize {
 // helper functions
 
 #[inline]
-pub fn store_u64(dest : &mut [u8], v : u64) -> usize {
+pub fn store_u64le(dest : &mut [u8], v : u64) -> usize {
     dest[0..8].copy_from_slice(&v.to_le_bytes());
     8
 }
 
 #[inline]
-pub fn store_u32(dest : &mut [u8], v : u32) -> usize {
+pub fn store_u32le(dest : &mut [u8], v : u32) -> usize {
     dest[0..4].copy_from_slice(&v.to_le_bytes());
     4
 }
 
 #[inline]
-pub fn store_u16(dest : &mut [u8], v : u16) -> usize {
+pub fn store_u16le(dest : &mut [u8], v : u16) -> usize {
     dest[0..2].copy_from_slice(&v.to_le_bytes());
     2
 }
@@ -401,17 +401,17 @@ pub fn store_u8(dest : &mut [u8], v : u8) -> usize {
 
 
 #[inline]
-pub fn load_u64(src : &[u8]) -> u64 {
+pub fn load_u64le(src : &[u8]) -> u64 {
     u64::from_le_bytes(src[0..8].try_into().unwrap())
 }
 
 #[inline]
-pub fn load_u32(src : &[u8]) -> u32 {
+pub fn load_u32le(src : &[u8]) -> u32 {
     u32::from_le_bytes(src[0..4].try_into().unwrap())
 }
 
 #[inline]
-pub fn load_u16(src : &[u8]) -> u16 {
+pub fn load_u16le(src : &[u8]) -> u16 {
     u16::from_le_bytes(src[0..2].try_into().unwrap())
 }
 
