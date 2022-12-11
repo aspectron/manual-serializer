@@ -322,7 +322,7 @@ impl Serializer {
             vec.push(c as u16);
         }
         vec.push(0);
-        println!("text: {} vec: {:?}",text,vec);
+        // println!("text: {} vec: {:?}",text,vec);
         self.try_store_u16le_slice(&vec)?;
         Ok(self)
     }
