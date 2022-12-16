@@ -6,7 +6,7 @@ Serialization tools for manual buffer processing
 [![Crates.io](https://img.shields.io/crates/v/manual-serializer.svg?maxAge=2592000)](https://crates.io/crates/manual-serializer)
 
 
-## Overview
+### Overview
 
 This crate is useful when you need to quickly and manually extract data structures from u8 buffers. This can be useful when parsing 3rd-party custom binary data files that have complex data layout making it hard to use existing serializers or structs with `#[repr(packed)]` (as those can be difficult to deal with due to alignment issues).
 
@@ -17,7 +17,7 @@ Beside the basic functions for loading and storing u8,u16,u32,u64 primitives, th
 
 NOTE: This crate currently supports only *little-endian* encoded primitives.
 
-## Example
+### Example
 
 ```rust
 
