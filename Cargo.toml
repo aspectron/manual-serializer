@@ -3,11 +3,12 @@ name = "manual-serializer"
 version = "0.1.0"
 edition = "2021"
 license = "Apache-2.0 OR MIT"
-repository = "https://github.com/aspectron/manual-serializerw"
+repository = "https://github.com/aspectron/manual-serializer"
+authors = ["Anton Yemelyanov <anton.yemelyanov@gmail.com>", "Surinder Singh Matoo Mattaur <surinder83singh@gmail.com>"]
 keywords = ["serialize", "deserialize", "stream", "encoding"]
 categories = ["encoding"]
 description = """
-Utilities for simple manual byte stream serialization & deserialization
+Utilities for simple manual byte buffer serialization & deserialization
 """
 
 [dependencies]
