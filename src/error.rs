@@ -1,4 +1,4 @@
-use std::{string::FromUtf16Error, array::TryFromSliceError};
+use std::{array::TryFromSliceError, string::FromUtf16Error};
 use thiserror::Error;
 
 #[derive(Debug, Error)]
@@ -11,16 +11,17 @@ pub enum Error {
 
     #[error("Error: {0}")]
     TryFromSliceError(TryFromSliceError),
-    
+
     #[error("Error while trying to offset {0} byte(s) from position {1} in buffer length of {2}")]
-    TryOffsetError(usize,usize,usize),
-    
+    TryOffsetError(usize, usize, usize),
+
     #[error("Error while trying to store {0} value at position {1} in buffer length of {2}")]
-    TryStoreError(&'static str,usize,usize),
-    
-    #[error("Error while trying to store slice of {0} byte(s) at position {1} in buffer length of {2}")]
-    TryStoreSliceError(usize,usize,usize),
-    
+    TryStoreError(&'static str, usize, usize),
+
+    #[error(
+        "Error while trying to store slice of {0} byte(s) at position {1} in buffer length of {2}"
+    )]
+    TryStoreSliceError(usize, usize, usize),
 }
 
 impl From<String> for Error {
